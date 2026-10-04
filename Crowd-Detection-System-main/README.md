@@ -23,7 +23,7 @@ Webcam or video
 Sample one frame (default every 2 seconds)
        │
        ▼
-       Gemma 4 vision + reasoning (Gemini API)
+Gemma 4 vision + reasoning (Gemini API)
        │
        ▼
 Structured analysis function call
@@ -38,9 +38,7 @@ Validate response and reject stale results
        ▼
 Convert boxes → count grid cells → density heatmap
        │
-       ├── Reseed optical-flow tracks from Gemma boxes
-       ├── Propagate boxes across live frames between API results
-       ├── Display live tracks beside the sampled image, grid, and risk
+       ├── Display estimate, boxes, grid, and risk
        └── Human operator advisory by Telegram (optional)
 ```
 
@@ -51,16 +49,14 @@ Convert boxes → count grid cells → density heatmap
 3. Send the image and crowd-monitoring prompt to Gemma 4. The model returns a `report_crowd_analysis` function call with machine-readable arguments. If the function call is missing, malformed, or invalid, the frame result is rejected.
 4. Validate the count, each bounding box, risk level, crowding flag, text fields, and recommended action. `people_count` must equal the number of accepted boxes. Allowed risk levels are `low`, `moderate`, and `high`; allowed actions are `continue_monitoring` and `notify_safety_operator`.
 5. Convert each normalized `[ymin, xmin, ymax, xmax]` box (coordinates from 0 to 1000) to frame pixels. The app assigns each box center to a grid cell and calculates the per-cell counts itself.
-6. Seed OpenCV sparse optical-flow tracks from Gemma's person boxes. Track the visible features on every camera frame and draw moving boxes and temporary track IDs on the live pane. The app replays a short, downsampled frame history when a delayed Gemma response arrives, so it can catch the boxes up from the analyzed sample to the present frame.
-7. Show the live camera and live optical-flow tracks beside the exact sampled frame Gemma analyzed. The sample pane includes Gemma's original boxes, grid heatmap, count, risk, observation, and sample age. Older samples remain visible as historical analysis, never painted over a newer live frame.
-8. Send a human-review advisory if Gemma recommends one or if configured count/density thresholds are reached. All Telegram advisories share a 60-second cooldown.
+6. Show the live camera beside the exact sampled frame Gemma analyzed. The sample pane includes Gemma's boxes, grid heatmap, count, risk, observation, and sample age. Older samples remain visible as historical analysis, never painted over a newer live frame.
+7. Send a human-review advisory if Gemma recommends one or if configured count/density thresholds are reached. All Telegram advisories share a 60-second cooldown.
 
 ## Safety and limitations
 
 - Gemma analyzes **sampled frames**, not every video frame. Results depend on API latency and can lag behind the live scene.
 - Old analysis remains available in the sample pane for inspection, but only results captured within 15 seconds can trigger current alerts.
-- Counts and boxes are model estimates and can be wrong. Invalid outputs are rejected; delayed valid outputs remain labeled with their sample age. A temporary API error does not create substitute detections.
-- Live optical-flow boxes follow image features inside Gemma's boxes; they are not a second person detector or persistent biometric identity system. Tracks can drift or be lost during occlusion, large motion, or appearance changes and are refreshed by new Gemma samples.
+- Counts and boxes are model estimates and can be wrong. Invalid or stale outputs are discarded; a temporary API error does not create substitute detections.
 - Camera samples are sent to Google's Gemini API. Use the system only where that data handling is appropriate.
 - Telegram messages are human-review advisories. The application does not control equipment, contact emergency services, or make verified emergency determinations.
 - This is a prototype, not a guaranteed safety-monitoring system. Do not use it as the sole basis for safety decisions.
@@ -148,4 +144,4 @@ Run the standard-library test suite from this directory:
 python -m unittest discover -s tests -v
 ```
 
-The tests cover structured response parsing, malformed outputs, count and coordinate validation, allowed risk/actions, pixel conversion, grid assignment, stale-result handling, and synthetic optical-flow movement. They do not call Gemini or require credentials.
+The tests cover structured response parsing, malformed outputs, count and coordinate validation, allowed risk/actions, pixel conversion, grid assignment, and stale-result handling. They do not call Gemini or require credentials.
