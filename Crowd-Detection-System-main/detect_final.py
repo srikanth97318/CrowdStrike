@@ -2,6 +2,7 @@
 
 import argparse
 import atexit
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 import os
 import time
@@ -27,6 +28,7 @@ from gemma_pipeline import (
     result_is_fresh,
     validate_analysis,
 )
+from motion_tracker import OpticalFlowTracker
 
 load_dotenv()
 
@@ -36,6 +38,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 TELEGRAM_COOLDOWN_SEC = 60
 MAX_GEMMA_RESULT_AGE_SEC = 15
+TRACK_HISTORY_SECONDS = 50
+TRACK_HISTORY_INTERVAL_SEC = 0.15
 
 
 def send_telegram_alert(message: str) -> bool:
@@ -221,6 +225,9 @@ latest_analysis_frame = None
 pending_sample_frame = None
 last_analysis_error = None
 console_cooldown = 1.0
+motion_tracker = OpticalFlowTracker()
+motion_history = deque()
+last_motion_history_time = 0.0
 
 print("[INFO] Running Gemma 4 crowd analysis – press Q to quit.\n")
 
@@ -231,6 +238,15 @@ while True:
         break
 
     now = time.monotonic()
+    motion_gray = motion_tracker.to_gray(frame)
+    if motion_tracker.previous_gray is not None:
+        motion_tracker.update_gray(motion_gray)
+    if now - last_motion_history_time >= TRACK_HISTORY_INTERVAL_SEC:
+        motion_history.append((now, motion_gray.copy()))
+        last_motion_history_time = now
+    while motion_history and now - motion_history[0][0] > TRACK_HISTORY_SECONDS:
+        motion_history.popleft()
+
     if gemma_future is not None and gemma_future.done():
         try:
             result = gemma_future.result()
@@ -251,6 +267,32 @@ while True:
             pending_sample_frame = None
             last_analysis_error = None
             sample_age = max(0.0, now - completed_capture_time)
+            replay_history_available = (
+                bool(motion_history)
+                and motion_history[0][0] <= completed_capture_time + TRACK_HISTORY_INTERVAL_SEC * 2
+            )
+            prior_track_shape = (
+                motion_tracker.previous_gray.shape[::-1]
+                if motion_tracker.previous_gray is not None else None
+            )
+            prior_track_boxes = (
+                motion_tracker.boxes(*prior_track_shape) if prior_track_shape else []
+            )
+            tracked_count = motion_tracker.seed(
+                result["persons"], latest_analysis_frame
+            ) if replay_history_available else 0
+            if replay_history_available:
+                for history_time, history_gray in motion_history:
+                    if history_time > completed_capture_time:
+                        motion_tracker.update_gray(history_gray)
+            else:
+                motion_tracker.seed([], latest_analysis_frame)
+            if replay_history_available:
+                motion_tracker.preserve_ids(prior_track_boxes)
+            print(
+                f"[TRACK] Started {tracked_count}/{result['people_count']} optical-flow tracks "
+                f"from Gemma's sample; replay={'yes' if replay_history_available else 'no (sample too old)'}."
+            )
             print(
                 f"[GEMMA] {result['people_count']} people estimated; "
                 f"risk={result['risk_level']}; action={result['recommended_action']}; "
@@ -341,8 +383,17 @@ while True:
     cv2.putText(live_panel, "LIVE CAMERA", (14, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
     telegram_status = "TG: ON" if BOT_TOKEN and CHAT_ID else "TG: CONSOLE ONLY"
     cv2.putText(live_panel, telegram_status, (14, 58), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    current_tracks = motion_tracker.boxes(w, h)
+    for track_id, x1, y1, x2, y2 in current_tracks:
+        cv2.rectangle(live_panel, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        label_y = y1 - 8 if y1 > 20 else y1 + 20
+        cv2.putText(live_panel, f"Person {track_id} · FLOW", (x1, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+    live_track_status = f"LIVE TRACKS: {len(current_tracks)}"
+    if latest_analysis is not None and not current_tracks:
+        live_track_status = "LIVE TRACKS: waiting for reliable features"
+    cv2.putText(live_panel, live_track_status, (14, 86), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0) if current_tracks else (0, 165, 255), 2)
     if overcrowd_alert:
-        cv2.putText(live_panel, "CROWD THRESHOLD ADVISORY", (14, 88), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        cv2.putText(live_panel, "CROWD THRESHOLD ADVISORY", (14, 114), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
     if analysis_available:
         analysis_panel = latest_analysis_frame.copy()
