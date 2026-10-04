@@ -1,147 +1,296 @@
-# Gemma 4 Crowd Safety Monitor
+# 🚨 AI Crowd Detection & Heatmap Monitoring System
 
-A camera and video crowd-monitoring prototype powered by **Gemma 4** through the Gemini API. Gemma is the project's only detection and reasoning model: it inspects sampled frames, estimates visible people and their locations, assesses crowd risk, and recommends whether a human operator should review the scene.
+<div align="center">
 
-The application turns Gemma's validated person boxes into a count, configurable spatial grid, density heatmap, and rate-limited Telegram advisories. It does not use YOLO or another detection model.
+![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
+![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-red?style=for-the-badge)
+![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-green?style=for-the-badge&logo=opencv)
+![Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-orange?style=for-the-badge)
 
-## Problem
+### Gemma 4 Person Detection • Vision Analysis • Human-Reviewed Safety Alerts
 
-Crowd operators need a quick way to see how many people appear in an area, where the denser groups are, and when a human should inspect a scene. This prototype combines sampled visual analysis with a spatial heatmap and a human-review notification path.
+---
 
-## Why Gemma 4
+Use **Gemma 4** to detect people in sampled camera frames, estimate normalized bounding boxes, and assess crowd safety. YOLOv8 remains available as a faster local detector. Gemma can also select an allowlisted action: continue monitoring or request a human safety-operator review through Telegram.
 
-Gemma 4 is the core visual perception and reasoning model, rather than a text-only report writer after another model performs detection. For every sampled image, Gemma returns one structured function call containing estimated person boxes, a count, crowding and risk assessments, an allowed action, and an explanation. The app validates that result and calculates grid occupancy from the boxes.
+⭐ If you like this project, don't forget to star the repository!
 
-The default Gemini API model ID is `gemma-4-26b-a4b-it`. The API's currently documented Gemma 4 model IDs are `gemma-4-26b-a4b-it` and `gemma-4-31b-it`. See Google's [Gemma API guide](https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api) and [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4).
+</div>
 
-## Architecture
+---
+
+# ✨ Features
+
+- 👤 Sampled-frame person detection and boxes using Gemma 4, or local YOLOv8
+- 📊 Live Crowd Counting
+- 🔥 Dynamic Heatmap Generation
+- 🚨 Overcrowding Detection
+- 📍 High Density Zone Detection
+- 📲 Telegram Alert Notifications
+- 🎥 Webcam & Video Support
+- ⚙ Adjustable Detection Thresholds
+- 🟢 Lightweight & Fast Inference
+- 📈 Grid-Based Crowd Density Analysis
+- 👁️ Optional Gemma 4 visual analysis of sampled camera frames
+- 🧭 Combined reasoning over visual evidence and YOLO counts/hotspots
+- 🧰 Gemma function calls select from validated, allowlisted safety actions
+- 🧑‍✈️ Human-review notifications only; no automatic physical controls or emergency-service calls
+- ⚡ Gemma runs in a background worker so camera inference and display continue during API calls
+
+---
+
+# 🏗 Project Architecture
 
 ```text
-Webcam or video
-       │
-       ▼
-Sample one frame (default every 2 seconds)
-       │
-       ▼
-Gemma 4 vision + reasoning (Gemini API)
-       │
-       ▼
-Structured analysis function call
-       │
-       ├── Estimated person boxes and count
-       ├── Risk, crowding, observations, reason
-       └── continue_monitoring | notify_safety_operator
-       │
-       ▼
-Validate response and reject stale results
-       │
-       ▼
-Convert boxes → count grid cells → density heatmap
-       │
-       ├── Display estimate, boxes, grid, and risk
-       └── Human operator advisory by Telegram (optional)
+       Camera / Video
+             │
+       ┌─────┴─────────────┐
+       ▼                   ▼
+ YOLOv8 detector      Gemma 4 vision
+ local / optional     sampled frames
+       │                   │
+       └─────────┬─────────┘
+                 ▼
+         Counts + heatmap
+                 │
+       Gemma safety reasoning
+                 ▼
+        Validated action policy
+         ┌────────┴─────────┐
+         ▼                  ▼
+ Continue monitoring   Request human review
+                            │
+                       Telegram alert
 ```
 
-## How it works
+---
 
-1. Open a webcam or video file with OpenCV.
-2. Copy an unmodified frame every `--sample-interval` seconds and submit it to a single background worker. No overlapping Gemma requests are made; the video display continues while a request is running. Per-frame reasoning uses Gemma's minimal thinking setting to reduce latency.
-3. Send the image and crowd-monitoring prompt to Gemma 4. The model returns a `report_crowd_analysis` function call with machine-readable arguments. If the function call is missing, malformed, or invalid, the frame result is rejected.
-4. Validate the count, each bounding box, risk level, crowding flag, text fields, and recommended action. `people_count` must equal the number of accepted boxes. Allowed risk levels are `low`, `moderate`, and `high`; allowed actions are `continue_monitoring` and `notify_safety_operator`.
-5. Convert each normalized `[ymin, xmin, ymax, xmax]` box (coordinates from 0 to 1000) to frame pixels. The app assigns each box center to a grid cell and calculates the per-cell counts itself.
-6. Show the live camera beside the exact sampled frame Gemma analyzed. The sample pane includes Gemma's boxes, grid heatmap, count, risk, observation, and sample age. Older samples remain visible as historical analysis, never painted over a newer live frame.
-7. Send a human-review advisory if Gemma recommends one or if configured count/density thresholds are reached. All Telegram advisories share a 60-second cooldown.
+# 🖥 Output
 
-## Safety and limitations
+## Live Detection
 
-- Gemma analyzes **sampled frames**, not every video frame. Results depend on API latency and can lag behind the live scene.
-- Old analysis remains available in the sample pane for inspection, but only results captured within 15 seconds can trigger current alerts.
-- Counts and boxes are model estimates and can be wrong. Invalid or stale outputs are discarded; a temporary API error does not create substitute detections.
-- Camera samples are sent to Google's Gemini API. Use the system only where that data handling is appropriate.
-- Telegram messages are human-review advisories. The application does not control equipment, contact emergency services, or make verified emergency determinations.
-- This is a prototype, not a guaranteed safety-monitoring system. Do not use it as the sole basis for safety decisions.
+✔ Person Detection
 
-## Requirements and installation
+✔ Crowd Counter
 
-Python 3.10 or newer is recommended.
+✔ Heatmap Overlay
+
+✔ High Density Highlight
+
+✔ Telegram Alerts
+
+---
+
+# ⚡ Tech Stack
+
+| Technology | Usage |
+|------------|-------|
+| Python | Programming Language |
+| YOLOv8 | Person Detection |
+| OpenCV | Image Processing |
+| NumPy | Matrix Operations |
+| Requests | Telegram API |
+| Python-dotenv | Environment Variables |
+| Google Gen AI SDK | Gemma 4 image analysis, reasoning, and tool calls |
+
+---
+
+# 📂 Project Structure
+
+```
+AI-Crowd-Detection-System
+│
+├── detect_final.py
+├── requirements.txt
+├── README.md
+├── .gitignore
+├── heatmap.png
+```
+
+
+---
+
+# ⚙ Installation
+
+Clone Repository
 
 ```bash
-git clone https://github.com/srikanth97318/CrowdStrike.git
-cd CrowdStrike/Crowd-Detection-System-main
-python3 -m venv .venv
-source .venv/bin/activate
+git clone https://github.com/shahjinay22/Crowd-Detection-System.git
+```
+
+Move into project
+
+```bash
+cd Crowd-Detection-System
+```
+
+Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1` instead of the `source` command.
+---
 
-## Configuration
+# ▶ Run
 
-Copy `.env.example` to `.env` and fill in credentials on your own machine. `.env` is ignored by Git.
+### Webcam
+
+```bash
+python detect_final.py --video 0
+```
+
+### Video
+
+```bash
+python detect_final.py --video crowd.mp4
+```
+
+### Gemma 4 vision and safety-action mode
+
+Gemma inspects a sampled, unmodified camera frame along with YOLO's person count, configured crowd threshold, and hot grid cells. It uses tool calling to choose between `continue_monitoring` and `notify_safety_operator`. The application validates the returned fields and executes only the notification tool. Notifications are limited to one per minute. YOLO's normal Telegram threshold alerts remain available independently.
+
+When enabled, sampled frames are sent to Google's Gemini API using the selected Gemma model. Choose an appropriate camera/privacy policy before enabling cloud vision analysis. API requests run in one background worker; Gemma's analysis is not real time and must not be treated as an emergency detection guarantee. Operator review is required before taking action.
+
+Add credentials to a local `.env` file (it is ignored by Git):
 
 ```dotenv
 GEMINI_API_KEY=your_google_ai_studio_key
-GEMMA_MODEL=gemma-4-26b-a4b-it
 BOT_TOKEN=your_telegram_bot_token
 CHAT_ID=your_telegram_chat_id
 ```
 
-`GEMINI_API_KEY` is required. `GEMMA_MODEL` defaults to `gemma-4-26b-a4b-it`. Telegram variables are optional; without both, advisories are shown in the console only.
-
-If the window reports a Gemini API error, read the full `[GEMMA]` error in the terminal. The app displays the HTTP status and sanitized API message; common causes are an invalid or blocked key (`401`), missing permission (`403`), unavailable model (`404`), or quota/rate limit (`429`). If a key was pasted into chat, a screenshot, or a public repository, revoke it in Google AI Studio and put a newly created key in `.env` before retrying. Never paste the new key into chat or commit `.env`.
-
-## Run
-
-Webcam:
+The Gemini API key enables frame analysis. Telegram credentials enable operator notifications and the existing threshold alerts. To use Gemma as the person detector, run:
 
 ```bash
 python detect_final.py --video 0 --detector gemma
 ```
 
-Video file:
+Gemma returns estimated person boxes from sampled images. The default sampling interval in Gemma detector mode is 2 seconds; each request sends a camera frame to Google's API and detection updates depend on API latency. Counts and boxes may be less consistent than YOLO and are not a real-time safety guarantee. Older Gemma boxes are marked stale and excluded from counts. API failures leave the video display running; in Gemma detector mode, detection counts pause until a new result arrives.
+
+The supported API model IDs are `gemma-4-26b-a4b-it` (default) and `gemma-4-31b-it`; choose with `--gemma_model`. For Gemma safety analysis alongside YOLO, use `--detector yolo --gemma --gemma_interval 10`.
+
+Gemma 4 does not have a 9B variant. Google lists 9B under Gemma 2; the current Gemma 4 family includes E2B, E4B, 12B, 26B A4B, and 31B variants. Use YOLO when you need local, frame-by-frame detection; Gemma mode is sampled and API-dependent.
+
+---
+
+# ⚙ Command Line Options
+
+| Parameter | Description |
+|-----------|-------------|
+| --video | Webcam or Video Path |
+| --model | YOLO Model |
+| --conf | Detection Confidence |
+| --grid | Grid Size |
+| --hot | High Density Threshold |
+| --max_people | Overcrowding Threshold |
+| --detector | Person detector: `gemma` (sampled API vision) or `yolo` (local real-time detection; default) |
+| --gemma | Add Gemma vision review and allowlisted operator-notification actions alongside YOLO |
+| --gemma_model | Gemma API model ID (default: `gemma-4-26b-a4b-it`) |
+| --gemma_interval | Seconds between sampled frames (default: 2 for Gemma detector, 10 for YOLO plus Gemma) |
+
+Example
 
 ```bash
-python detect_final.py --video path/to/video.mp4 --detector gemma
+python detect_final.py --video crowd.mp4 --grid 5 --hot 3 --max_people 20
 ```
 
-Example with a slower sampling cadence and stricter density threshold:
+---
 
-```bash
-python detect_final.py --video 0 --detector gemma --sample-interval 3 --grid 4 --hot 3 --max_people 25
+# 🚨 Alert System
+
+## High Density Zone
+
+Whenever a grid cell exceeds the configured threshold, it is highlighted in **Red** and an alert is generated.
+
+## Overcrowding Alert
+
+If the total number of detected people exceeds the configured limit, the system instantly sends a **Telegram Notification**.
+
+Example
+
+```
+🚨 OVERCROWD ALERT
+
+People Detected : 25
+
+Threshold : 20
+
+Time : 2026-07-01
 ```
 
-## Options
+---
 
-| Option | Default | Purpose |
-| --- | ---: | --- |
-| `--video` | `0` | Webcam index or video file path |
-| `--detector` | `gemma` | Gemma 4 is the only detection model |
-| `--gemma-model` | `GEMMA_MODEL` or `gemma-4-26b-a4b-it` | Supported Gemma 4 API model ID |
-| `--sample-interval` | `2` | Minimum seconds between submitted frames; a slow request can increase the actual interval |
-| `--grid` | `4` | Square grid dimension (`4` creates a 4×4 grid) |
-| `--hot` | `2` | People in one cell that trigger a high-density advisory |
-| `--max_people` | `20` | Count that triggers a crowd advisory |
-| `--alpha` | `0.4` | Heatmap opacity from 0 to 1 |
+# 📊 Heatmap Legend
 
-The older `--gemma_interval` and `--gemma_model` spellings remain as CLI aliases.
+🔵 Low Density
 
-## Example advisory
+🟡 Medium Density
 
-```text
-Crowd Safety Advisory — Gemma 4
-People detected (estimate): 23
-Risk level: HIGH
-Crowd observation: Several people appear close together near the center.
-Recommended action: Human operator review
-This is an AI advisory, not an automatic emergency determination.
-```
+🔴 High Density
 
-## Tests
+---
 
-Run the standard-library test suite from this directory:
+# 🎯 Applications
 
-```bash
-python -m unittest discover -s tests -v
-```
+🏟 Stadium Monitoring
 
-The tests cover structured response parsing, malformed outputs, count and coordinate validation, allowed risk/actions, pixel conversion, grid assignment, and stale-result handling. They do not call Gemini or require credentials.
+🚉 Railway Stations
+
+🏫 College Campus
+
+🏥 Hospitals
+
+🛍 Shopping Malls
+
+🎤 Concerts
+
+🏭 Industrial Safety
+
+🚦 Smart City Surveillance
+
+---
+
+# 🚀 Future Improvements
+
+- Multi-Camera Support
+- Cloud Dashboard
+- Face Recognition
+- Audio Alarm
+- Database Logging
+- Web Dashboard
+- AI Crowd Prediction
+- Mobile App Integration
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome!
+
+Fork the repository.
+
+Create your feature branch.
+
+Commit your changes.
+
+Push to your branch.
+
+Open a Pull Request.
+
+---
+
+# 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+<div align="center">
+
+Made with ❤️ using Python, YOLOv8 and OpenCV
+
+⭐ Star this repository if you found it useful!
+
+</div>
