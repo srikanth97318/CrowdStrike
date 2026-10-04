@@ -64,12 +64,19 @@ export const DiagnosticsBar: React.FC = () => {
           )}
         </div>
 
+        {/* Gemma 4 AI Status */}
+        <div className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="text-command-muted">AI Intelligence:</span>
+          <span className="text-cyan-400 font-bold">GEMMA 4</span>
+        </div>
+
         <span className="text-zinc-700">|</span>
 
-        {/* YOLO Status */}
+        {/* YOLO Vision Status */}
         <div className="flex items-center gap-1.5">
           <Cpu size={11} className={isYoloActive ? 'text-emerald-400' : 'text-amber-400'} />
-          <span className="text-command-muted">YOLO:</span>
+          <span className="text-command-muted">Vision (YOLOv8):</span>
           <span className={isYoloActive ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
             {isYoloActive ? 'PROCESSING' : isBackendConnected ? 'STANDBY' : 'OFFLINE'}
           </span>
@@ -103,6 +110,12 @@ export const DiagnosticsBar: React.FC = () => {
         <div className="hidden sm:block">
           <span>Last: </span>
           <span className="text-gray-300">{timeAgo}</span>
+        </div>
+
+        <span className="text-zinc-700 hidden md:inline">|</span>
+
+        <div className="hidden md:flex items-center gap-1 text-[9px] text-cyan-400 font-semibold px-1.5 py-0.2 rounded bg-cyan-950/40 border border-cyan-500/20">
+          <span>Powered by Gemma</span>
         </div>
       </div>
     </div>

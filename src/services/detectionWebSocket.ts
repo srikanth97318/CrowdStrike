@@ -22,6 +22,16 @@ export interface DetectionResponse {
   hot_threshold: number;
   processing_time_ms: number;
   yolo_active: boolean;
+  gemma?: {
+    status: string;
+    observation: string;
+    severity: 'low' | 'moderate' | 'high';
+    confidence: number;
+    recommendedCheck: string;
+    lastUpdated: string;
+  };
+  gemma_status?: 'active' | 'standby' | 'error';
+  gemma_model?: string;
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';

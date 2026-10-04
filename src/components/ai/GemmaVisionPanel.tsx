@@ -1,11 +1,11 @@
 import React from 'react';
-import { Eye, ShieldAlert, CheckCircle, Clock, Sparkles } from 'lucide-react';
+import { ShieldAlert, CheckCircle, Clock, Sparkles } from 'lucide-react';
 import { useMonitorStore } from '../../store/monitorStore';
 import { Card, CardHeader } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 
 export const GemmaVisionPanel: React.FC = () => {
-  const { aiAnalysis, aiConfidence, settings } = useMonitorStore();
+  const { aiAnalysis, aiConfidence, settings, gemmaStatus } = useMonitorStore();
 
   const getSeverityBadge = () => {
     switch (aiAnalysis.severity) {
@@ -20,18 +20,17 @@ export const GemmaVisionPanel: React.FC = () => {
   };
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col border-cyan-500/40 shadow-cyan-glow/20">
       <CardHeader
-        title="AI Vision Analysis"
-        subtitle={`Gemma 4 Optical Reasoning (${settings.gemmaModel})`}
-        icon={<Sparkles size={18} />}
+        title="✦ GEMMA AI INTELLIGENCE"
+        subtitle={`Gemma 4 Multimodal Reasoning (${settings.gemmaModel})`}
+        icon={<Sparkles size={18} className="text-cyan-400" />}
         action={
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono text-cyan-400 flex items-center gap-1">
-              <Eye size={13} className="text-cyan-400" />
-              Gemma Vision
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5">
+              <span className={`h-1.5 w-1.5 rounded-full ${gemmaStatus === 'active' ? 'bg-cyan-400 animate-pulse' : 'bg-amber-400'}`} />
+              {gemmaStatus === 'active' ? 'GEMMA 4 ACTIVE' : 'GEMMA STANDBY'}
             </span>
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
           </div>
         }
       />
@@ -89,11 +88,14 @@ export const GemmaVisionPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Safety Compliance Notice */}
-      <div className="mt-4 pt-3 border-t border-command-border/60 flex items-center gap-2 text-[11px] text-command-muted">
-        <CheckCircle size={13} className="text-cyan-400 shrink-0" />
-        <span className="font-mono text-[10px] leading-tight">
-          Advisory Intelligence Policy: AI provides decision support only. Human safety operator review required prior to intervention.
+      {/* Safety Compliance Notice & Powered by Gemma Branding */}
+      <div className="mt-4 pt-3 border-t border-command-border/60 flex items-center justify-between text-[11px] text-command-muted font-mono">
+        <div className="flex items-center gap-1.5 text-[10px]">
+          <CheckCircle size={12} className="text-cyan-400 shrink-0" />
+          <span>Human-in-the-loop decision support</span>
+        </div>
+        <span className="text-[10px] text-cyan-400 font-semibold px-2 py-0.5 rounded bg-cyan-950/40 border border-cyan-500/20">
+          Powered by Gemma
         </span>
       </div>
     </Card>

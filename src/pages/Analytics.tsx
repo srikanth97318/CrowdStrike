@@ -151,6 +151,14 @@ export const Analytics: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      {/* Attribution Footer */}
+      <div className="flex items-center justify-between text-[11px] font-mono text-command-muted px-2 pt-2 border-t border-command-border/50">
+        <span>Detection Metrics: <strong className="text-gray-300">YOLOv8 Local Vision</strong></span>
+        <span className="text-cyan-400 font-semibold flex items-center gap-1">
+          ✦ AI Insights: Powered by Gemma
+        </span>
+      </div>
     </div>
   );
 };

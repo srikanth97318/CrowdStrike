@@ -100,8 +100,8 @@ export const Settings: React.FC = () => {
         {/* 1. Detection Settings */}
         <Card>
           <CardHeader
-            title="Optical Detection Engine"
-            subtitle="YOLOv8 Parameters (--conf, --grid, --hot, --max_people, --alpha)"
+            title="Vision Detection Engine"
+            subtitle="Real-time YOLOv8 Vision Detection (--conf, --grid, --hot, --max_people, --alpha)"
             icon={<Sliders size={18} />}
           />
 
@@ -225,11 +225,11 @@ export const Settings: React.FC = () => {
         </Card>
 
         {/* 2. AI Intelligence Settings (Gemma 4) */}
-        <Card>
+        <Card className="border-cyan-500/30">
           <CardHeader
-            title="AI Vision Safety Review"
+            title="✦ Gemma AI Intelligence"
             subtitle="Google Gen AI SDK & Tool Calling (--gemma, --gemma_model, --gemma_interval)"
-            icon={<Sparkles size={18} />}
+            icon={<Sparkles size={18} className="text-cyan-400" />}
           />
 
           <div className="space-y-4 text-xs font-mono">

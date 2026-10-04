@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Send, CheckCircle2, Sliders, Shield } from 'lucide-react';
+import { Send, CheckCircle2, Shield, Sparkles } from 'lucide-react';
 import { useMonitorStore } from '../../store/monitorStore';
 import { Card, CardHeader } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -9,58 +9,85 @@ export const ModelStatusCard: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* 1. Detection Engine Card */}
-      <Card>
+      {/* 1. AI Intelligence & Vision Stack Card */}
+      <Card className="border-cyan-500/30 shadow-cyan-glow/20">
         <CardHeader
-          title="Detection Engine"
-          subtitle="Dual Computer Vision Architecture"
-          icon={<Cpu size={18} />}
+          title="AI Intelligence & Vision Stack"
+          subtitle="Gemma 4 Multimodal Intelligence + YOLOv8"
+          icon={<Sparkles size={18} className="text-cyan-400" />}
           action={
-            <Badge variant="safe" dot size="sm">
-              ACTIVE
+            <Badge variant="cyan" dot size="sm">
+              POWERED BY GEMMA
             </Badge>
           }
         />
 
         <div className="space-y-3 font-mono text-xs">
-          {/* YOLOv8 Status */}
+          {/* Primary Showcase: Gemma 4 AI Intelligence */}
+          <div className="p-3 rounded-lg bg-gradient-to-r from-cyan-950/40 to-command-surface border border-cyan-500/50 shadow-inner">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`h-2.5 w-2.5 rounded-full ${settings.gemmaEnabled ? 'bg-cyan-400 animate-pulse' : 'bg-slate-500'}`} />
+                <div>
+                  <span className="font-bold text-white text-sm">Gemma 4 AI Intelligence</span>
+                  <span className="text-[10px] text-cyan-300 block">{settings.gemmaModel}</span>
+                </div>
+              </div>
+              <Badge variant="cyan" size="sm">
+                HEADLINE AI
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5 pt-1 text-[10px] text-command-muted border-t border-cyan-500/20">
+              <div className="flex items-center gap-1 text-gray-300">
+                <CheckCircle2 size={11} className="text-cyan-400 shrink-0" />
+                <span>Scene Analysis</span>
+              </div>
+              <div className="flex items-center gap-1 text-gray-300">
+                <CheckCircle2 size={11} className="text-cyan-400 shrink-0" />
+                <span>Safety Alerts</span>
+              </div>
+              <div className="flex items-center gap-1 text-gray-300">
+                <CheckCircle2 size={11} className="text-cyan-400 shrink-0" />
+                <span>Interpretation</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary Vision Detection: YOLOv8 */}
           <div className="p-2.5 rounded-lg bg-command-surface border border-command-border flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
               <div>
-                <span className="font-bold text-white">YOLOv8 Local</span>
-                <span className="text-[10px] text-command-muted block">Real-time Local Inference</span>
+                <span className="font-bold text-gray-200">Vision Detection: YOLOv8</span>
+                <span className="text-[10px] text-command-dim block">Real-time local frame inference & boxes</span>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-cyan-400 font-bold">Conf: {settings.confThreshold}</span>
+              <span className="text-emerald-400 font-bold">ACTIVE</span>
               <span className="text-[10px] text-command-dim block">Class 0: Person</span>
             </div>
           </div>
 
-          {/* Gemma 4 Vision Status */}
-          <div className="p-2.5 rounded-lg bg-command-surface border border-command-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={`h-2 w-2 rounded-full ${settings.gemmaEnabled ? 'bg-cyan-400 animate-pulse' : 'bg-slate-500'}`} />
-              <div>
-                <span className="font-bold text-white">Gemma 4 Vision</span>
-                <span className="text-[10px] text-command-muted block">{settings.gemmaModel}</span>
+          {/* AI Architecture Pipeline Flow */}
+          <div className="p-2 rounded-lg bg-black/40 border border-command-border/50">
+            <div className="text-[9px] uppercase tracking-wider text-command-muted font-bold mb-1 flex items-center justify-between">
+              <span>Pipeline Dataflow</span>
+              <span className="text-cyan-400">Two-Layer Architecture</span>
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-center text-gray-300">
+              <div className="px-1.5 py-0.5 rounded bg-command-surface border border-command-border text-command-muted">
+                Video Feed
+              </div>
+              <span className="text-cyan-400 font-bold">→</span>
+              <div className="px-1.5 py-0.5 rounded bg-command-surface border border-command-border text-gray-200">
+                YOLOv8 Detection
+              </div>
+              <span className="text-cyan-400 font-bold">→</span>
+              <div className="px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/50 text-cyan-300 font-bold">
+                Gemma 4 Reasoning
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-cyan-400 font-bold">Every {settings.gemmaInterval}s</span>
-              <span className="text-[10px] text-command-dim block">Tool: notify_safety</span>
-            </div>
-          </div>
-
-          <div className="pt-2 flex items-center justify-between text-[11px] text-command-muted border-t border-command-border/60">
-            <span className="flex items-center gap-1">
-              <Sliders size={12} className="text-cyan-400" />
-              <span>Pipeline: YOLOv8 + Gemma 4</span>
-            </span>
-            <span className="text-emerald-400 flex items-center gap-1">
-              <CheckCircle2 size={12} /> Synchronized
-            </span>
           </div>
         </div>
       </Card>

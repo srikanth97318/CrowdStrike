@@ -785,6 +785,19 @@ export const useMonitorStore = create<MonitorStore>((set, get) => ({
       densityLevel: cell.count > res.hot_threshold * 2 ? 'critical' : 'high',
     }));
 
+    const gemmaUpdate = res.gemma ? {
+      aiAnalysis: {
+        status: (res.gemma.status || state.aiAnalysis.status) as any,
+        observation: res.gemma.observation || state.aiAnalysis.observation,
+        severity: (res.gemma.severity || state.aiAnalysis.severity) as any,
+        confidence: res.gemma.confidence ?? state.aiConfidence,
+        recommendedCheck: res.gemma.recommendedCheck || state.aiAnalysis.recommendedCheck,
+        lastUpdated: res.gemma.lastUpdated || state.aiAnalysis.lastUpdated,
+      },
+      aiConfidence: res.gemma.confidence ?? state.aiConfidence,
+      gemmaStatus: (res.gemma_status || state.gemmaStatus) as any,
+    } : {};
+
     set({
       peopleCount: count,
       previousPeopleCount: prevCount,
@@ -803,6 +816,7 @@ export const useMonitorStore = create<MonitorStore>((set, get) => ({
       yoloStatus: 'active',
       isYoloActive: true,
       isBackendConnected: true,
+      ...gemmaUpdate,
       lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     });
   },

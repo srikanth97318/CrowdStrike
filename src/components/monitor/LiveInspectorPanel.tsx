@@ -7,8 +7,8 @@ import {
   ChevronDown,
   ChevronUp,
   Cpu,
-  Eye,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import { useMonitorStore } from '../../store/monitorStore';
 import { Card, CardHeader } from '../ui/Card';
@@ -101,29 +101,39 @@ export const LiveInspectorPanel: React.FC = () => {
         </div>
       </Card>
 
-      {/* 2. AI VISION REVIEW */}
-      <Card>
+      {/* 2. GEMMA AI INTELLIGENCE */}
+      <Card className="border-cyan-500/30">
         <CardHeader
-          title="AI Vision Review"
-          subtitle="Gemma 4 Advisory Analysis"
-          icon={<Eye size={18} />}
+          title="✦ GEMMA AI INTELLIGENCE"
+          subtitle={`Contextual Scene Analysis (${settings.gemmaModel})`}
+          icon={<Sparkles size={18} className="text-cyan-400" />}
           action={
             <Badge variant="cyan" size="sm" dot>
-              {aiAnalysis.status.toUpperCase()}
+              POWERED BY GEMMA
             </Badge>
           }
         />
 
         <div className="space-y-2.5 text-xs">
-          <p className="text-gray-200 leading-relaxed font-sans bg-command-surface p-2.5 rounded-md border border-command-border/60">
-            "{aiAnalysis.observation}"
-          </p>
+          <div className="bg-command-surface p-2.5 rounded-md border border-command-border/60">
+            <span className="text-[10px] font-mono uppercase text-command-muted block mb-1">
+              Scene Understanding:
+            </span>
+            <p className="text-gray-200 leading-relaxed font-sans">
+              "{aiAnalysis.observation}"
+            </p>
+          </div>
 
           <div className="p-2.5 rounded-md bg-cyan-950/20 border border-cyan-500/30 text-[11px] font-mono text-cyan-300">
             <span className="font-bold uppercase text-[10px] block text-cyan-400 mb-0.5">
-              HUMAN REVIEW CHECK:
+              SAFETY OPERATOR ADVISORY:
             </span>
             "{aiAnalysis.recommendedCheck}"
+          </div>
+
+          <div className="flex items-center justify-between text-[10px] font-mono text-command-muted pt-1">
+            <span>AI Model: <strong className="text-gray-200">Gemma 4</strong></span>
+            <span>Vision: <strong className="text-gray-200">YOLOv8</strong></span>
           </div>
         </div>
       </Card>

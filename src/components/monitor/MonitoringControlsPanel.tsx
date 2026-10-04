@@ -135,34 +135,40 @@ export const MonitoringControlsPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Detection Engine Selector */}
+      {/* 3. AI & Vision Architecture Selector */}
       <div className="space-y-2 pt-2 border-t border-command-border/60">
         <label className="text-[11px] font-mono font-bold uppercase text-command-muted tracking-wider block">
-          Primary Detection Engine
+          AI & Vision Architecture
         </label>
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => updateSettings({ detector: 'yolo' })}
-            className={`p-2 rounded-lg border text-center text-xs font-mono transition flex items-center justify-center gap-2 ${
+            className={`p-2 rounded-lg border text-center text-xs font-mono transition flex flex-col items-center justify-center gap-0.5 ${
               settings.detector === 'yolo'
                 ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-cyan-glow'
                 : 'bg-command-surface text-command-muted border-command-border hover:text-white'
             }`}
           >
-            <Cpu size={14} />
-            <span>YOLOv8 (Local)</span>
+            <div className="flex items-center gap-1.5">
+              <Cpu size={14} />
+              <span>YOLOv8 Local</span>
+            </div>
+            <span className="text-[9px] text-command-dim font-normal">Real-Time Vision</span>
           </button>
 
           <button
             onClick={() => updateSettings({ detector: 'gemma' })}
-            className={`p-2 rounded-lg border text-center text-xs font-mono transition flex items-center justify-center gap-2 ${
+            className={`p-2 rounded-lg border text-center text-xs font-mono transition flex flex-col items-center justify-center gap-0.5 ${
               settings.detector === 'gemma'
                 ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold shadow-cyan-glow'
                 : 'bg-command-surface text-command-muted border-command-border hover:text-white'
             }`}
           >
-            <Eye size={14} />
-            <span>Gemma Vision</span>
+            <div className="flex items-center gap-1.5">
+              <Eye size={14} />
+              <span>Gemma 4 Vision</span>
+            </div>
+            <span className="text-[9px] text-cyan-400/80 font-normal">Scene Intelligence</span>
           </button>
         </div>
       </div>

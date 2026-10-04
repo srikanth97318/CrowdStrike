@@ -11,6 +11,7 @@ import {
   Cpu,
   UserCheck,
   Zap,
+  Sparkles,
 } from 'lucide-react';
 import { useMonitorStore } from '../../store/monitorStore';
 import { Badge } from '../ui/Badge';
@@ -140,6 +141,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Mode Selector and System Status */}
         <div className="p-3 border-t border-command-border space-y-3">
+          {/* AI Architecture Showcase */}
+          <div className="p-2.5 rounded-lg bg-cyan-950/20 border border-cyan-500/30 text-xs font-mono">
+            <div className="flex items-center justify-between text-cyan-400 font-bold mb-1.5">
+              <span className="flex items-center gap-1.5 text-[11px]">
+                <Sparkles size={12} className="text-cyan-400" />
+                GEMMA AI
+              </span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">
+                HEADLINE AI
+              </span>
+            </div>
+            <div className="space-y-1 text-[10px] text-command-muted">
+              <div className="flex items-center justify-between">
+                <span>Intelligence:</span>
+                <span className="text-gray-200 font-medium">Gemma 4</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Vision Engine:</span>
+                <span className="text-gray-300">YOLOv8 Local</span>
+              </div>
+            </div>
+          </div>
+
           {/* Mode Switcher */}
           <div className="p-2 rounded-lg bg-command-card border border-command-border">
             <div className="flex items-center justify-between mb-2">

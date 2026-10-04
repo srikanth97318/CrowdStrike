@@ -21,16 +21,16 @@ export const PrimaryKpiBar: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* 1. DETECTION CONFIDENCE (YOLOv8 — MANDATORY KPI) */}
+      {/* 1. AI INTELLIGENCE & DETECTION CONFIDENCE */}
       <Card className="relative overflow-hidden hover:border-cyan-500/50">
         <div className="flex items-center justify-between text-command-muted mb-2">
           <span className="text-xs font-mono tracking-wider uppercase font-bold text-gray-300 flex items-center gap-1.5">
             <Target size={15} className="text-cyan-400" />
-            Detection Confidence
+            AI Intelligence & Detection
           </span>
           <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-            YOLOv8 ACTIVE
+            Gemma AI ● ACTIVE
           </span>
         </div>
 
@@ -44,7 +44,7 @@ export const PrimaryKpiBar: React.FC = () => {
               <span className="text-xl font-bold font-mono text-cyan-400/80">%</span>
             </div>
             <span className="text-[10px] font-mono text-command-muted block mt-0.5">
-              Confidence Floor: {(settings.confThreshold * 100).toFixed(0)}%
+              Vision Floor: {(settings.confThreshold * 100).toFixed(0)}%
             </span>
           </div>
 
@@ -68,11 +68,11 @@ export const PrimaryKpiBar: React.FC = () => {
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
               />
             </svg>
-            <span className="absolute text-[10px] font-mono font-bold text-white">YOLO</span>
+            <span className="absolute text-[9px] font-mono font-bold text-cyan-300">GEMMA</span>
           </div>
         </div>
 
-        {/* Confidence Bar Meter */}
+        {/* Confidence Bar Meter & Technical Architecture Details */}
         <div className="mt-3 pt-2.5 border-t border-command-border/60">
           <div className="w-full bg-command-surface h-1.5 rounded-full overflow-hidden border border-command-border">
             <div
@@ -80,9 +80,13 @@ export const PrimaryKpiBar: React.FC = () => {
               style={{ width: `${detectionConfidence * 100}%` }}
             />
           </div>
-          <div className="flex justify-between text-[10px] font-mono text-command-dim mt-1">
-            <span>Model: YOLOv8 Nano</span>
-            <span>Target: Class 0 (Person)</span>
+          <div className="flex justify-between text-[10px] font-mono mt-1">
+            <span className="text-gray-300">
+              AI Reasoning: <strong className="text-cyan-400">Gemma 4</strong>
+            </span>
+            <span className="text-command-dim">
+              Vision Detection: <strong className="text-gray-300">YOLOv8</strong>
+            </span>
           </div>
         </div>
       </Card>

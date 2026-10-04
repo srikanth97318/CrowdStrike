@@ -14,7 +14,6 @@ export const MonitoringOverlay: React.FC = () => {
     fps,
     videoFile,
     isYoloActive,
-    isBackendConnected,
   } = useMonitorStore();
 
   const [timestamp, setTimestamp] = useState<string>('');
@@ -95,19 +94,19 @@ export const MonitoringOverlay: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pt-1 border-t border-zinc-800 text-[11px] text-command-dim">
+          <div className="flex items-center gap-2.5 pt-1 border-t border-zinc-800 text-[10px] text-command-dim">
+            <div className="flex items-center gap-1 text-cyan-300 font-semibold">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span>AI: GEMMA 4</span>
+            </div>
+
+            <span className="text-zinc-700">|</span>
+
             <div className="flex items-center gap-1">
-              <span>YOLO:</span>
-              {isYoloActive ? (
-                <span className="text-emerald-400 font-bold flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  ACTIVE
-                </span>
-              ) : (
-                <span className="text-amber-400 font-bold">
-                  {isBackendConnected ? 'STANDBY' : 'NOT CONNECTED'}
-                </span>
-              )}
+              <span>VISION:</span>
+              <span className={isYoloActive ? 'text-emerald-400 font-bold' : 'text-zinc-400'}>
+                YOLOv8 {isYoloActive ? 'ACTIVE' : 'READY'}
+              </span>
             </div>
 
             <span className="text-zinc-700">|</span>

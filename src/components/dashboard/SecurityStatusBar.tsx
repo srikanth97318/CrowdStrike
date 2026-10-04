@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Camera, Cpu, Eye, Send, Radio } from 'lucide-react';
+import { Camera, Cpu, Eye, Send, Radio } from 'lucide-react';
 import { useMonitorStore } from '../../store/monitorStore';
 
 export const SecurityStatusBar: React.FC = () => {
@@ -39,22 +39,22 @@ export const SecurityStatusBar: React.FC = () => {
           <span className="text-command-dim text-[10px]">({activeCamera.id.toUpperCase()})</span>
         </div>
 
-        {/* YOLO Status */}
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-command-card border border-command-border text-command-muted">
-          <Cpu size={13} className="text-cyan-400" />
-          <span className="text-gray-300">
-            YOLO {yoloStatus === 'active' ? 'ACTIVE' : 'STANDBY'}
+        {/* Primary AI: Gemma 4 Intelligence */}
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-cyan-950/30 border border-cyan-500/40 text-cyan-300">
+          <Eye size={13} className="text-cyan-400" />
+          <span className="font-bold">
+            GEMMA AI: {gemmaStatus === 'active' ? 'ACTIVE' : 'STANDBY'}
           </span>
-          <span className="text-cyan-400 text-[10px]">~{fps} FPS</span>
+          <span className="text-cyan-400/80 text-[10px] hidden sm:inline">(Gemma 4)</span>
         </div>
 
-        {/* Gemma Status */}
+        {/* Secondary: YOLOv8 Vision Detection */}
         <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-command-card border border-command-border text-command-muted">
-          <Eye size={13} className={gemmaStatus === 'active' ? 'text-cyan-400' : 'text-slate-500'} />
+          <Cpu size={13} className="text-emerald-400" />
           <span className="text-gray-300">
-            GEMMA {gemmaStatus === 'active' ? 'ACTIVE' : 'OFFLINE'}
+            VISION: YOLOv8 {yoloStatus === 'active' ? 'ACTIVE' : 'STANDBY'}
           </span>
-          <span className="text-command-dim text-[10px]">Advisory Mode</span>
+          <span className="text-cyan-400 text-[10px]">~{fps} FPS</span>
         </div>
 
         {/* Telegram Status */}
@@ -66,20 +66,19 @@ export const SecurityStatusBar: React.FC = () => {
         </div>
       </div>
 
-      {/* Right: Live Telemetry Snapshot */}
+      {/* Right: Live Telemetry Snapshot & Powered by Gemma */}
       <div className="hidden lg:flex items-center gap-4 text-command-muted text-[11px]">
         <div className="flex items-center gap-1.5">
           <Radio size={12} className="text-emerald-400 animate-pulse" />
-          <span>COUNT: <strong className="text-white">{peopleCount}</strong></span>
+          <span>PEOPLE: <strong className="text-white">{peopleCount}</strong></span>
         </div>
         <div className="text-command-dim">|</div>
         <div>
-          <span>YOLO CONF: <strong className="text-cyan-400">{(detectionConfidence * 100).toFixed(1)}%</strong></span>
+          <span>VISION CONF: <strong className="text-cyan-400">{(detectionConfidence * 100).toFixed(1)}%</strong></span>
         </div>
         <div className="text-command-dim">|</div>
-        <div className="text-command-dim flex items-center gap-1">
-          <Shield size={11} className="text-cyan-400" />
-          <span>ENCRYPTED COMMAND FEED</span>
+        <div className="text-cyan-300 font-semibold flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px]">
+          <span>POWERED BY GEMMA</span>
         </div>
       </div>
     </div>

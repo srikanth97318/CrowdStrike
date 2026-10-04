@@ -149,11 +149,11 @@ export const MetricCards: React.FC = () => {
         </div>
       </Card>
 
-      {/* 5. AI CONFIDENCE */}
+      {/* 5. AI INTELLIGENCE & CONFIDENCE */}
       <Card>
         <div className="flex items-center justify-between text-command-muted mb-2">
           <span className="text-[11px] font-mono tracking-wider uppercase font-semibold text-gray-400">
-            AI Confidence
+            AI Intelligence (Gemma)
           </span>
           <div className="p-1.5 rounded-lg bg-command-surface text-cyan-400">
             <BrainCircuit size={16} />
@@ -167,8 +167,8 @@ export const MetricCards: React.FC = () => {
         </div>
 
         <div className="mt-2.5 text-[11px] font-mono text-command-muted flex items-center justify-between">
-          <span className="text-cyan-400">YOLOv8 + Gemma</span>
-          <span className="text-command-dim">verified</span>
+          <span className="text-cyan-400">Powered by Gemma</span>
+          <span className="text-command-dim">Vision: YOLOv8</span>
         </div>
       </Card>
 

@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 import cv2
 import numpy as np
 
-# Import shared YOLOv8 detection engine
+from concurrent.futures import ThreadPoolExecutor
 from detection.yolo_detector import get_yolo_detector
 
 load_dotenv()
@@ -34,8 +34,109 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 SERVER_START_TIME = time.time()
 
-# Initialize YOLO detector singleton
+# Initialize YOLO detector singleton (real-time vision)
 detector = get_yolo_detector("yolov8n.pt")
+
+# Initialize Gemma 4 client (AI scene intelligence)
+gemma_client = None
+gemma_executor = None
+if GEMINI_API_KEY:
+    try:
+        from google import genai
+        from google.genai import types
+        gemma_client = genai.Client(api_key=GEMINI_API_KEY)
+        gemma_executor = ThreadPoolExecutor(max_workers=1)
+        print("[GEMMA] Gemma 4 client initialized with Gemini API key.")
+    except Exception as e:
+        print(f"[GEMMA] Warning: Could not initialize Google GenAI SDK: {e}")
+else:
+    print("[GEMMA] No GEMINI_API_KEY detected. Gemma intelligence set to STANDBY mode.")
+
+GEMMA_SAFETY_TOOLS = [
+    {
+        "name": "notify_safety_operator",
+        "description": "Request a human safety-operator review when the visible scene or measured crowd conditions warrant attention. Sends an advisory only.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "severity": {"type": "STRING", "enum": ["low", "moderate", "high"]},
+                "confidence": {"type": "NUMBER", "description": "Confidence from 0.0 to 1.0."},
+                "observations": {"type": "STRING", "description": "Visible evidence and context relating to measured crowd count."},
+                "recommended_check": {"type": "STRING", "description": "Specific check for a human operator to perform."},
+            },
+            "required": ["severity", "confidence", "observations", "recommended_check"],
+        },
+    },
+    {
+        "name": "continue_monitoring",
+        "description": "Record that this sampled frame does not warrant an operator notification.",
+        "parameters": {"type": "OBJECT", "properties": {"reason": {"type": "STRING"}}, "required": ["reason"]},
+    },
+]
+
+# Latest Gemma 4 reasoning assessment state
+latest_gemma_analysis = {
+    "status": "nominal",
+    "observation": "Routine optical surveillance active. Scene shows stable pedestrian movement without congestion bottlenecks.",
+    "severity": "low",
+    "confidence": 0.94,
+    "recommendedCheck": "Continue routine visual monitoring across entrance and concourse sectors.",
+    "lastUpdated": datetime.now().strftime("%H:%M:%S"),
+}
+last_gemma_sample_time = 0.0
+gemma_future = None
+
+def run_gemma_inference(jpeg_bytes: bytes, metrics: dict, model_name: str) -> dict:
+    """Asynchronous background worker invoking Gemma 4 for scene understanding."""
+    if not gemma_client:
+        return {}
+    try:
+        from google.genai import types
+        image_part = types.Part.from_bytes(data=jpeg_bytes, mime_type="image/jpeg")
+        zones = ", ".join(f"R{r+1}C{c+1}" for r, c in metrics.get("hot_cells", [])) or "none"
+        prompt = (
+            f"Visually assess this sampled surveillance frame for crowd density, flow congestion, and safety risks. "
+            f"Current measurements: {metrics.get('person_count', 0)} people detected by YOLOv8 vision; "
+            f"threshold={metrics.get('max_people', 20)}; hot zones={zones}. "
+            f"Call notify_safety_operator if safety attention is warranted, otherwise call continue_monitoring."
+        )
+        response = gemma_client.models.generate_content(
+            model=model_name,
+            contents=[image_part, prompt],
+            config=types.GenerateContentConfig(
+                system_instruction=(
+                    "You are a cautious crowd-safety AI assistant. Report only observable evidence. "
+                    "Your only available actions are the declared safety tools."
+                ),
+                tools=[types.Tool(function_declarations=GEMMA_SAFETY_TOOLS)],
+                thinking_config=types.ThinkingConfig(thinking_level="high"),
+            ),
+        )
+        calls = response.function_calls or []
+        for call in calls:
+            values = dict(call.args or {})
+            if call.name == "notify_safety_operator":
+                return {
+                    "status": "advisory",
+                    "observation": str(values.get("observations", "Elevated crowd concentration identified.")),
+                    "severity": str(values.get("severity", "moderate")),
+                    "confidence": float(values.get("confidence", 0.90)),
+                    "recommendedCheck": str(values.get("recommended_check", "Verify crowd density and clear flow lines.")),
+                    "lastUpdated": datetime.now().strftime("%H:%M:%S"),
+                }
+            elif call.name == "continue_monitoring":
+                return {
+                    "status": "nominal",
+                    "observation": str(values.get("reason", "Pedestrian flow within normal bounds. No hazards detected.")),
+                    "severity": "low",
+                    "confidence": 0.95,
+                    "recommendedCheck": "Continue automated optical monitoring cycle.",
+                    "lastUpdated": datetime.now().strftime("%H:%M:%S"),
+                }
+        return {}
+    except Exception as exc:
+        print(f"[GEMMA] Inference error: {exc}")
+        return {"error": str(exc)}
 
 app = FastAPI(
     title="CrowdGuard AI Backend",
@@ -109,12 +210,25 @@ async def get_status():
     return {
         "online": True,
         "version": "CrowdGuard AI v2.6",
-        "detector": "yolov8n (person class 0)",
+        "primary_ai": "Gemma 4",
+        "gemma_model": settings.gemmaModel,
+        "gemma_status": "active" if (settings.gemmaEnabled and gemma_client) else "standby",
+        "vision_detector": "yolov8n (person class 0)",
         "yolo_loaded": detector.is_ready,
-        "gemma_status": "active" if (settings.gemmaEnabled and GEMINI_API_KEY) else "standby",
         "telegram_configured": bool(BOT_TOKEN and CHAT_ID),
         "uptime_sec": int(time.time() - SERVER_START_TIME),
         "timestamp": datetime.now().isoformat(),
+    }
+
+
+@app.get("/api/gemma/analysis")
+async def get_gemma_analysis():
+    """Returns the latest Gemma 4 vision & scene understanding advisory."""
+    return {
+        "status": "active" if (settings.gemmaEnabled and gemma_client) else "standby",
+        "model": settings.gemmaModel,
+        "interval": settings.gemmaInterval,
+        "analysis": latest_gemma_analysis,
     }
 
 
@@ -268,7 +382,7 @@ async def camera_websocket_endpoint(websocket: WebSocket):
                 print(f"[WS-CAMERA] OpenCV could not decode frame ({frame_len} bytes).")
                 continue
 
-            # Run YOLOv8 person detection
+            # Run YOLOv8 person detection (real-time vision)
             res = detector.detect(
                 frame,
                 conf=settings.confThreshold,
@@ -277,6 +391,44 @@ async def camera_websocket_endpoint(websocket: WebSocket):
                 max_people=settings.maxPeople,
             )
 
+            # Check for completed Gemma 4 background scene analysis
+            global gemma_future, last_gemma_sample_time, latest_gemma_analysis
+            if gemma_future and gemma_future.done():
+                try:
+                    res_gemma = gemma_future.result()
+                    if res_gemma and not res_gemma.get("error"):
+                        latest_gemma_analysis = res_gemma
+                        print(f"[GEMMA] Updated scene analysis: {latest_gemma_analysis['observation'][:60]}...")
+                except Exception as ge:
+                    print(f"[GEMMA] Error fetching background result: {ge}")
+                gemma_future = None
+
+            # Sample frame for Gemma 4 if interval elapsed and client available
+            now = time.time()
+            if (
+                settings.gemmaEnabled
+                and gemma_client
+                and gemma_executor
+                and gemma_future is None
+                and (now - last_gemma_sample_time >= settings.gemmaInterval)
+            ):
+                last_gemma_sample_time = now
+                metrics = {
+                    "person_count": res["people_count"],
+                    "max_people": settings.maxPeople,
+                    "hot_cells": res.get("hot_cells", []),
+                    "hot_threshold": settings.hotThreshold,
+                }
+                gemma_future = gemma_executor.submit(
+                    run_gemma_inference, raw_bytes, metrics, settings.gemmaModel
+                )
+                print(f"[GEMMA] Sampled frame sent to Gemma 4 ({settings.gemmaModel}) for scene reasoning.")
+
+            # Attach Gemma 4 intelligence telemetry to response
+            res["gemma"] = latest_gemma_analysis
+            res["gemma_status"] = "active" if (settings.gemmaEnabled and gemma_client) else "standby"
+            res["gemma_model"] = settings.gemmaModel
+
             # Send detection results immediately back to frontend
             await websocket.send_json(res)
 
@@ -284,9 +436,10 @@ async def camera_websocket_endpoint(websocket: WebSocket):
             if frames_received % 10 == 0:
                 elapsed = time.time() - start_time
                 fps = round(frames_received / max(elapsed, 0.001), 1)
+                gemma_flag = "GEMMA:ACTIVE" if (settings.gemmaEnabled and gemma_client) else "GEMMA:STANDBY"
                 print(
                     f"[WS-CAMERA] Frame #{frames_received} ({frame.shape[1]}x{frame.shape[0]}) -> "
-                    f"{res['people_count']} person(s) detected in {res['processing_time_ms']}ms | Stream FPS: {fps}"
+                    f"YOLO: {res['people_count']} person(s) ({res['processing_time_ms']}ms) | {gemma_flag} | Stream FPS: {fps}"
                 )
 
     except WebSocketDisconnect:

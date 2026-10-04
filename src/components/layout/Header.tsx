@@ -5,6 +5,7 @@ import {
   Bell,
   Clock,
   Shield,
+  Sparkles,
 } from 'lucide-react';
 import { useMonitorStore } from '../../store/monitorStore';
 import { Badge } from '../ui/Badge';
@@ -87,6 +88,12 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
       {/* Right: Clean System Status, Live Clock, Notifications, Operator Avatar */}
       <div className="flex items-center gap-3 sm:gap-4">
+        {/* Powered by Gemma subtle badge */}
+        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyan-950/40 text-cyan-300 font-mono text-[11px] font-semibold border border-cyan-500/30">
+          <Sparkles size={12} className="text-cyan-400" />
+          <span>Powered by Gemma</span>
+        </div>
+
         {/* Clean System Status */}
         <Badge variant="safe" dot pulse className="font-mono text-xs font-semibold px-2.5 py-1">
           SYSTEM ONLINE
