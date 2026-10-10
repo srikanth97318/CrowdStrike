@@ -4,6 +4,22 @@ A command-center dashboard built for optical crowd monitoring, spatial density h
 
 Built with **React 18**, **TypeScript**, **Vite**, **Tailwind CSS**, **Zustand**, and **Recharts**.
 
+## Repository architecture
+
+This repository contains two separate runnable applications:
+
+1. **Dashboard (`src/` + `backend/`)** — the React/Vite interface talks to the FastAPI backend. The backend uses YOLOv8 for per-frame person boxes and counts, then sends sampled frames and those measurements to Gemma 4 for scene-level safety advisories. `/ws/camera` carries frame detections; `/ws/monitor` broadcasts dashboard telemetry. The browser dashboard does not import or run the nested Python app.
+2. **Standalone Gemma monitor (`Crowd-Detection-System-main/`)** — an independent OpenCV webcam/video program. Gemma 4 supplies the sampled-frame person boxes and risk analysis; the program displays those results, grid counts, and heatmap, with optional Telegram advisories. It has its own README, requirements, environment example, and tests.
+
+The dashboard's **Demo Mode** uses generated sample data and does not run either detector. Select **Live Backend** and start FastAPI to use the YOLOv8 + Gemma path. Run the standalone Gemma monitor separately when you want Gemma to produce the person detections.
+
+```text
+src/                           React pages, UI components, state, and browser services
+backend/api_server.py          FastAPI REST and WebSocket endpoints
+backend/detection/             YOLOv8 person detector used by the dashboard backend
+Crowd-Detection-System-main/   Separate Gemma 4-only OpenCV application
+```
+
 ---
 https://drive.google.com/file/d/1SOi-pb3FK8QNELM1xXqk0xI1orvAI6L3/view?usp=sharing
 
@@ -109,6 +125,5 @@ python backend/api_server.py
 In the **Live Monitor** (`/monitor`):
 - Click **USE MY CAMERA** to stream browser webcam frames directly to YOLOv8 over WebSocket.
 - Or click **PROVIDE A VIDEO** to upload an MP4/WebM video file for live frame-by-frame inference.
-- Real bounding boxes (`PERSON {confidence}%`), live counts, and diagnostics (FPS, latency) render instantaneously with sub-100ms latency.
+- Real bounding boxes (`PERSON {confidence}%`), live counts, and FPS/latency diagnostics are returned by the local backend.
 - Crowd threshold alerts trigger automatically when detected count exceeds your safety limit.
-
